@@ -19,6 +19,7 @@
             active: i === activeIndex,
             adjacent: Math.abs(i - activeIndex) === 1,
             far: Math.abs(i - activeIndex) >= 2,
+            'is-redeemed': !!card.redeemedAt,
           }
         ]"
         @click="selectCard(i)"
@@ -36,9 +37,22 @@
               :class="{ filled: j <= getCardPoints(card.id) }"
             />
           </div>
-          <div class="card-points-label">
-            {{ getCardPoints(card.id) }} / {{ card.maxPoints }} 點
+          <div class="card-bottom-row">
+            <div class="card-points-label">
+              {{ getCardPoints(card.id) }} / {{ card.maxPoints }} 點
+            </div>
+            <!-- Status badge -->
+            <span v-if="card.redeemedAt" class="card-status-badge redeemed">已兌換</span>
+            <span v-else-if="getCardPoints(card.id) >= card.maxPoints" class="card-status-badge complete">已集滿</span>
           </div>
+        </div>
+        <!-- Redeemed stamp watermark -->
+        <div v-if="card.redeemedAt" class="card-stamp-mark">
+          <svg viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="26" stroke="rgba(120,60,10,0.5)" stroke-width="2" stroke-dasharray="5 2.5"/>
+            <text x="30" y="28" text-anchor="middle" font-size="8" font-family="Noto Serif TC, serif" fill="rgba(120,60,10,0.7)" font-weight="700">已兌換</text>
+            <text x="30" y="39" text-anchor="middle" font-size="6" font-family="Noto Sans TC, sans-serif" fill="rgba(120,60,10,0.55)">{{ card.redeemedAt }}</text>
+          </svg>
         </div>
       </div>
     </div>
@@ -182,7 +196,6 @@ function getCardPoints(cardId: string) {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 500px;
   overflow: hidden;
 }
 
@@ -288,11 +301,60 @@ function getCardPoints(cardId: string) {
   border-color: transparent;
 }
 
+.card-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .card-points-label {
   font-size: 11px;
   color: rgba(61,43,31,0.55);
   font-family: 'Noto Sans TC', sans-serif;
-  text-align: right;
+}
+
+.card-status-badge {
+  font-size: 10px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+}
+
+.card-status-badge.complete {
+  background: rgba(251,191,36,0.35);
+  color: #92400e;
+}
+
+.card-status-badge.redeemed {
+  background: rgba(120,60,10,0.15);
+  color: #78350f;
+}
+
+/* Redeemed watermark stamp */
+.carousel-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-stamp-mark {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-12deg);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.card-stamp-mark svg {
+  width: 64px;
+  height: 64px;
+}
+
+/* Dim redeemed cards slightly */
+.carousel-item.is-redeemed {
+  filter: saturate(0.6);
 }
 
 /* Nav arrows */

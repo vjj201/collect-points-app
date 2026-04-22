@@ -6,12 +6,13 @@ export interface Card {
   maxPoints: number
   createdAt: string
   color: CardColor
+  redeemedAt?: string | null   // 已兌換日期，null = 未兌換
 }
 
 export interface PointLog {
   id: string
   cardId: string
-  delta: number // +1 = stamp, -1 = erase
+  delta: number
   stampIcon: StampIcon
   operatedBy: string
   createdAt: string
@@ -20,11 +21,16 @@ export interface PointLog {
 export type CardColor = 'peach' | 'mint' | 'lavender' | 'butter' | 'sky'
 
 export type StampIcon =
-  | 'star'
-  | 'heart'
-  | 'flower'
-  | 'sun'
-  | 'moon'
-  | 'leaf'
-  | 'crown'
-  | 'diamond'
+  | 'star' | 'heart' | 'flower' | 'sun'
+  | 'moon' | 'leaf'  | 'crown'  | 'diamond'
+
+export type FilterStatus = 'all' | 'incomplete' | 'complete' | 'redeemed'
+export type SortKey = 'createdAt' | 'points'
+export type SortDir = 'asc' | 'desc'
+
+export interface FilterState {
+  status: FilterStatus
+  owner: string       // '' = all owners
+  sortKey: SortKey
+  sortDir: SortDir
+}
