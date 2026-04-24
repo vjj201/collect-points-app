@@ -39,7 +39,7 @@
             <div class="select-wrap">
               <select v-model="local.owner" class="owner-select">
                 <option value="">全部擁有者</option>
-                <option v-for="o in owners" :key="o" :value="o">{{ o }}</option>
+                <option v-for="u in owners" :key="u.id" :value="u.id">{{ u.avatar }} {{ u.name }}</option>
               </select>
               <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"/>
@@ -81,11 +81,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import type { FilterState, FilterStatus, SortKey } from '../types'
+import type { FilterState, FilterStatus, SortKey, User } from '../types'
 
 const props = defineProps<{
   modelValue: FilterState
-  owners: string[]
+  owners: User[]
 }>()
 const emit = defineEmits<{ 'update:modelValue': [v: FilterState] }>()
 

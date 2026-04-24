@@ -7,10 +7,12 @@
       <div class="header-right">
         <FilterSortPanel :model-value="filter" :owners="store.allOwners" @update:model-value="onFilterUpdate" />
         <UserSwitcher
-          :current="store.currentUser"
-          :users="allUsers"
-          @update:current="store.currentUser = $event"
-          @addUser="addUser"
+          :current-user-id="store.currentUserId"
+          :current-user="store.currentUser"
+          :users="store.users"
+          @update:current-user-id="store.currentUserId = $event"
+          @addUser="store.addUser($event.name, $event.avatar)"
+          @deleteUser="store.deleteUser($event)"
         />
         <button class="add-btn" @click="router.push('/create')" title="新增集點卡">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -105,15 +107,8 @@ function onFilterUpdate(newFilter: FilterState) {
   carouselKey.value++  // reset carousel position
 }
 
-// Extra users (beyond card owners)
-const extraUsers = ref<string[]>([])
-const allUsers = computed(() =>
-  [...new Set([...store.allOwners, ...extraUsers.value])]
-)
-
-function addUser(name: string) {
-  if (!extraUsers.value.includes(name)) extraUsers.value.push(name)
-}
+// Extra users (beyond card owners) — now managed in store directly
+const allUsers = computed(() => store.users)
 
 const displayCards = computed(() => store.filteredAndSorted(filter))
 

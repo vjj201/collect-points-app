@@ -9,7 +9,14 @@
         </svg>
       </button>
       <h1 class="header-title">新增集點卡</h1>
-      <div style="width:40px" />
+      <UserSwitcher
+        :current-user-id="store.currentUserId"
+        :current-user="store.currentUser"
+        :users="store.users"
+        @update:current-user-id="store.currentUserId = $event"
+        @addUser="store.addUser($event.name, $event.avatar)"
+        @deleteUser="store.deleteUser($event)"
+      />
     </header>
 
     <main class="create-body">
@@ -20,7 +27,10 @@
             <span class="preview-name">{{ form.name || '集點卡名稱' }}</span>
             <span class="preview-date">{{ today }}</span>
           </div>
-          <div class="preview-owner">{{ form.owner || '擁有者' }}</div>
+          <div class="preview-owner">
+            <template v-if="selectedOwner">{{ selectedOwner.avatar }} {{ selectedOwner.name }}</template>
+            <template v-else>擁有者</template>
+          </div>
           <div class="preview-dots">
             <span v-for="i in (form.maxPoints || 10)" :key="i" class="dot" />
           </div>
@@ -52,8 +62,18 @@
 
       <!-- Owner -->
       <div class="field-group">
-        <label class="field-label" for="card-owner">擁有者名稱</label>
-        <input id="card-owner" v-model="form.owner" class="field-input" type="text" placeholder="例如：小明" maxlength="20" />
+        <label class="field-label" for="card-owner">擁有者</label>
+        <div class="select-wrap">
+          <select id="card-owner" v-model="form.ownerId" class="field-input field-select">
+            <option value="">-- 選擇擁有者 --</option>
+            <option v-for="u in store.users" :key="u.id" :value="u.id">
+              {{ u.avatar }} {{ u.name }}
+            </option>
+          </select>
+          <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
       </div>
 
       <!-- Description -->
@@ -70,11 +90,11 @@
         <span class="field-hint">{{ form.description.length }} / 100</span>
       </div>
 
-      <!-- Points slider -->
+      <!-- 集點章數 slider -->
       <div class="field-group">
         <label class="field-label">
-          點數上限
-          <span class="pts-inline-val">{{ form.maxPoints }} 點</span>
+          集點章數
+          <span class="pts-inline-val">{{ form.maxPoints }} 章</span>
         </label>
         <input
           type="range"
@@ -83,6 +103,7 @@
           step="1"
           v-model.number="form.maxPoints"
           class="pts-slider"
+          :style="sliderStyle"
         />
         <div class="pts-range-labels">
           <span>1</span>
@@ -101,9 +122,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCardStore } from '../stores/cardStore'
+import UserSwitcher from '../components/UserSwitcher.vue'
 import type { CardColor } from '../types'
 
 const router = useRouter()
@@ -112,10 +134,12 @@ const today = new Date().toISOString().split('T')[0]
 
 const form = reactive({
   name: '',
-  owner: '',
+  ownerId: store.currentUserId,
   description: '',
   maxPoints: 10,
 })
+
+const selectedOwner = computed(() => store.getUserById(form.ownerId))
 
 const selectedColor = ref<CardColor>('peach')
 
@@ -127,10 +151,16 @@ const colors: { key: CardColor; label: string }[] = [
   { key: 'sky',      label: '天空' },
 ]
 
+const sliderStyle = computed(() => {
+  const pct = ((form.maxPoints - 1) / 29) * 100
+  return {
+    background: `linear-gradient(to right, #d97706 0%, #d97706 ${pct}%, rgba(180,150,120,0.25) ${pct}%, rgba(180,150,120,0.25) 100%)`
+  }
+})
+
 function submit() {
   if (!form.name.trim()) return
-  const card = store.createCard(form.name.trim(), form.maxPoints, form.owner.trim(), form.description.trim())
-  card.color = selectedColor.value
+  const card = store.createCard(form.name.trim(), form.maxPoints, form.ownerId, form.description.trim(), selectedColor.value)
   router.replace(`/card/${card.id}`)
 }
 </script>
@@ -331,13 +361,6 @@ function submit() {
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: linear-gradient(
-    to right,
-    #d97706 0%,
-    #d97706 calc((var(--val, 10) - 1) / 29 * 100%),
-    rgba(180,150,120,0.25) calc((var(--val, 10) - 1) / 29 * 100%),
-    rgba(180,150,120,0.25) 100%
-  );
   outline: none;
   cursor: pointer;
 }
@@ -370,6 +393,21 @@ function submit() {
   font-size: 11px;
   color: rgba(61,43,31,0.4);
   font-family: 'Noto Sans TC', sans-serif;
+}
+
+.select-wrap {
+  position: relative; display: flex; align-items: center;
+}
+
+.field-select {
+  appearance: none; -webkit-appearance: none;
+  padding-right: 36px; cursor: pointer;
+}
+
+.select-arrow {
+  position: absolute; right: 12px;
+  width: 16px; height: 16px;
+  color: rgba(61,43,31,0.4); pointer-events: none;
 }
 
 /* Submit */

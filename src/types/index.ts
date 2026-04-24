@@ -6,7 +6,13 @@ export interface Card {
   maxPoints: number
   createdAt: string
   color: CardColor
-  redeemedAt?: string | null   // 已兌換日期，null = 未兌換
+  redeemedAt?: string | null
+}
+
+export interface User {
+  id: string
+  name: string
+  avatar: string  // emoji animal
 }
 
 export interface PointLog {
@@ -14,7 +20,7 @@ export interface PointLog {
   cardId: string
   delta: number
   stampIcon: StampIcon
-  operatedBy: string
+  operatedBy: string   // user id
   createdAt: string
 }
 
@@ -30,7 +36,13 @@ export type SortDir = 'asc' | 'desc'
 
 export interface FilterState {
   status: FilterStatus
-  owner: string       // '' = all owners
+  owner: string
   sortKey: SortKey
   sortDir: SortDir
 }
+
+export const ANIMAL_AVATARS = [
+  '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼',
+  '🐨','🐯','🦁','🐮','🐷','🐸','🐙','🐧',
+  '🦋','🐢','🦄','🐳','🦔','🐺','🦝','🦦',
+] as const

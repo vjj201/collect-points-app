@@ -9,12 +9,19 @@
         </svg>
       </button>
       <div class="header-center">
-        <!-- Status badge -->
-        <span class="status-badge" :class="cardStatus">
-          {{ statusLabel }}
-        </span>
+        <span class="status-badge" :class="cardStatus">{{ statusLabel }}</span>
       </div>
-      <div class="points-badge">{{ currentPoints }} / {{ card?.maxPoints }}</div>
+      <div class="header-right-group">
+        <div class="points-badge">{{ currentPoints }} / {{ card?.maxPoints }}</div>
+        <UserSwitcher
+          :current-user-id="store.currentUserId"
+          :current-user="store.currentUser"
+          :users="store.users"
+          @update:current-user-id="store.currentUserId = $event"
+          @addUser="store.addUser($event.name, $event.avatar)"
+          @deleteUser="store.deleteUser($event)"
+        />
+      </div>
     </header>
 
     <main class="card-body" v-if="card">
@@ -23,7 +30,12 @@
           <div class="card-title-row">
             <div class="card-title-left">
               <h2 class="card-name">{{ card.name }}</h2>
-              <p class="card-owner">{{ card.owner || '未設定擁有者' }}</p>
+              <p class="card-owner">
+                <template v-if="ownerUser">
+                  <span class="owner-avatar">{{ ownerUser.avatar }}</span> {{ ownerUser.name }}
+                </template>
+                <template v-else>未設定擁有者</template>
+              </p>
             </div>
             <div class="card-meta">
               <span class="meta-label">建立日期</span>
@@ -147,6 +159,7 @@ import { useCardStore } from '../stores/cardStore'
 import StampGrid from '../components/StampGrid.vue'
 import StampPicker from '../components/StampPicker.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import UserSwitcher from '../components/UserSwitcher.vue'
 import type { StampIcon } from '../types'
 
 const route = useRoute()
@@ -158,6 +171,7 @@ const card = computed(() => store.cards.find(c => c.id === cardId) ?? null)
 const slots = computed(() => store.getCardSlots(cardId))
 const currentPoints = computed(() => store.getCardPoints(cardId))
 const cardStatus = computed(() => store.getCardStatus(cardId))
+const ownerUser = computed(() => card.value ? store.getUserById(card.value.owner) : undefined)
 
 const statusLabel = computed(() => {
   switch (cardStatus.value) {
@@ -238,6 +252,10 @@ function doRedeem() {
 .status-badge.complete   { background: rgba(251,191,36,0.25); color: #92400e; }
 .status-badge.redeemed   { background: rgba(180,83,9,0.15); color: #92400e; }
 
+.header-right-group {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+
 .points-badge {
   background: rgba(61,43,31,0.12); color: #3d2b1f;
   font-family: 'Noto Serif TC', serif; font-size: 13px; font-weight: 600;
@@ -246,11 +264,13 @@ function doRedeem() {
 
 .card-body {
   flex: 1; min-height: 0;
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px 20px; position: relative; z-index: 5; overflow-y: auto;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 16px 20px; position: relative; z-index: 5;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.layout-wrap { width: 100%; max-width: 680px; }
+.layout-wrap { width: 100%; max-width: 680px; padding-bottom: 8px; }
 
 .card-panel {
   background: rgba(255,255,255,0.72);
@@ -268,7 +288,8 @@ function doRedeem() {
   font-family: 'Noto Serif TC', serif; font-size: 22px; font-weight: 700;
   color: #3d2b1f; margin: 0;
 }
-.card-owner { font-size: 13px; color: rgba(61,43,31,0.55); margin: 0; font-family: 'Noto Sans TC', sans-serif; }
+.card-owner { font-size: 13px; color: rgba(61,43,31,0.55); margin: 0; font-family: 'Noto Sans TC', sans-serif; display: flex; align-items: center; gap: 4px; }
+.owner-avatar { font-size: 16px; line-height: 1; }
 
 .card-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .meta-label { font-size: 10px; color: rgba(61,43,31,0.4); font-family: 'Noto Sans TC', sans-serif; }
